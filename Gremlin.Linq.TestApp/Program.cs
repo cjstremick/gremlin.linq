@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Diagnostics;
 using System.Threading.Tasks;
 using Gremlin.Linq.Linq;
 using Microsoft.Extensions.Configuration;
@@ -22,10 +23,11 @@ namespace Gremlin.Linq.TestApp
                 .AddJsonFile("appsettings.Development.json", false)
                 .Build();
 
-            // Optionally write Gremlin commands to the console...
+            // Gremlin queries will be written to the Output->Debug window.  You can 
+            // optionally write these messages to the console by adding the following line...
             // Trace.Listeners.Add(new TextWriterTraceListener(Console.Out, "Gremlin"));
             
-            using (var client = CreateGraphClient())
+            using (var client = new GraphClientFactory(_configuration).CreateGremlinGraphClient())
             {
                 // await CreateSampleData(client);
 
@@ -35,7 +37,7 @@ namespace Gremlin.Linq.TestApp
             }
         }
 
-        private static async Task CleanupSampleData(GremlinGraphClient client)
+        private static async Task CleanupSampleData(IGraphClient client)
         {
             Console.WriteLine("Cleanup old data?");
             if (Console.ReadKey(true).Key == ConsoleKey.Y)
@@ -50,7 +52,7 @@ namespace Gremlin.Linq.TestApp
             }
         }
 
-        private static async Task PerformTests(GremlinGraphClient client)
+        private static async Task PerformTests(IGraphClient client)
         {
             Console.WriteLine("** All people:  ");
             var allPeople = await client
@@ -104,7 +106,7 @@ namespace Gremlin.Linq.TestApp
                 Console.WriteLine($"\t{user.Entity.Name}");
         }
 
-        private static async Task CreateSampleData(GremlinGraphClient client)
+        private static async Task CreateSampleData(IGraphClient client)
         {
             Console.Write("Adding people...");
             var bob = await client.Add(new Person {FirstName = "Bob", LastName = "Oak", Age = 33}).SubmitAsync();
@@ -141,13 +143,6 @@ namespace Gremlin.Linq.TestApp
             Console.WriteLine("Done.");
         }
 
-        private static GremlinGraphClient CreateGraphClient()
-        {
-            var settings = new GraphClientSettings(_configuration);
-            var client =
-                new GremlinGraphClient(settings.Url, settings.Database, settings.Collection, settings.Password);
-            return client;
-        }
     }
 
     [GremlinLabel("person")]
