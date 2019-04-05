@@ -67,7 +67,6 @@ namespace Gremlin.Linq.Linq
     {
         public static string BuildGremlinQuery(this PropertyInfo propertyInfo, object entity)
         {
-            if (propertyInfo.GetCustomAttribute<IgnoreAttribute>() != null) return null;
             var value = propertyInfo.GetGetMethod().Invoke(entity, new object[0]);
             if (value == null) return string.Empty;
 
