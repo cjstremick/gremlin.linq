@@ -7,6 +7,9 @@ namespace Gremlin.Linq.TestApp
 {
     internal class Program
     {
+
+        private static IConfiguration _configuration;
+
         private static void Main(string[] args)
         {
             MainAsync(args).GetAwaiter().GetResult();
@@ -14,6 +17,14 @@ namespace Gremlin.Linq.TestApp
 
         private static async Task MainAsync(string[] args)
         {
+            _configuration = new ConfigurationBuilder()
+                .AddJsonFile("appsettings.json")
+                .AddJsonFile("appsettings.Development.json", false)
+                .Build();
+
+            // Optionally write Gremlin commands to the console...
+            // Trace.Listeners.Add(new TextWriterTraceListener(Console.Out, "Gremlin"));
+            
             using (var client = CreateGraphClient())
             {
                 // await CreateSampleData(client);
@@ -132,11 +143,7 @@ namespace Gremlin.Linq.TestApp
 
         private static GremlinGraphClient CreateGraphClient()
         {
-            var config = new ConfigurationBuilder()
-                .AddJsonFile("appsettings.json")
-                .AddJsonFile("appsettings.Development.json", false)
-                .Build();
-            var settings = new GraphClientSettings(config);
+            var settings = new GraphClientSettings(_configuration);
             var client =
                 new GremlinGraphClient(settings.Url, settings.Database, settings.Collection, settings.Password);
             return client;

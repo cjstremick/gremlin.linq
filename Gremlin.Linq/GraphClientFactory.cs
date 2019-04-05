@@ -1,7 +1,7 @@
-﻿namespace Gremlin.Linq
-{
-    using Microsoft.Extensions.Configuration;
+﻿using Microsoft.Extensions.Configuration;
 
+namespace Gremlin.Linq
+{
     public class GraphClientFactory
     {
         private readonly IConfiguration _configuration;
@@ -11,15 +11,10 @@
             _configuration = configuration;
         }
 
-        public IGremlinLogger Logger { get; set; }
-
         public IGraphClient CreateGremlinGraphClient(GraphClientSettings settings)
         {
             var client =
-                new GremlinGraphClient(settings.Url, settings.Database, settings.Collection, settings.Password)
-                {
-                    Logger = Logger
-                };
+                new GremlinGraphClient(settings.Url, settings.Database, settings.Collection, settings.Password);
             return client;
         }
 
@@ -27,10 +22,7 @@
         {
             var settings = new GraphClientSettings(_configuration);
             var gremlinGraphClient =
-                new GremlinGraphClient(settings.Url, settings.Database, settings.Collection, settings.Password)
-                {
-                    Logger = Logger
-                };
+                new GremlinGraphClient(settings.Url, settings.Database, settings.Collection, settings.Password);
             return gremlinGraphClient;
         }
     }

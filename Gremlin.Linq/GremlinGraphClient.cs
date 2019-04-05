@@ -1,15 +1,15 @@
-﻿using System.Reflection;
+﻿using System;
+using System.Collections.Generic;
+using System.Diagnostics;
+using System.Linq;
+using System.Reflection;
+using System.Threading.Tasks;
+using Gremlin.Net.Driver;
+using Gremlin.Net.Structure.IO.GraphSON;
+using Newtonsoft.Json;
 
 namespace Gremlin.Linq
 {
-    using System;
-    using System.Collections.Generic;
-    using System.Linq;
-    using System.Threading.Tasks;
-    using Net.Driver;
-    using Net.Structure.IO.GraphSON;
-    using Newtonsoft.Json;
-
     public class GremlinGraphClient : IGraphClient
     {
         private readonly GremlinClient _gremlinClient;
@@ -24,8 +24,6 @@ namespace Gremlin.Linq
                 GremlinClient.GraphSON2MimeType);
         }
 
-        public IGremlinLogger Logger { get; set; }
-
         public void Dispose()
         {
             _gremlinClient?.Dispose();
@@ -34,7 +32,7 @@ namespace Gremlin.Linq
         public async Task<IEnumerable<QueryResult<TEntity>>> SubmitAsync<TEntity>(string gremlinExpression)
             where TEntity : new()
         {
-            Logger?.Log(gremlinExpression);
+            Trace.TraceInformation(gremlinExpression);
             var result = await _gremlinClient.SubmitAsync<dynamic>(gremlinExpression);
             return MaterializeCollection<TEntity>(result);
         }
@@ -42,7 +40,7 @@ namespace Gremlin.Linq
         public async Task<IEnumerable<Tuple<QueryResult<T1>, QueryResult<T2>>>>
             SubmitDynamicAsync<T1, T2>(string gremlinExpression) where T1 : new() where T2 : new()
         {
-            Logger?.Log(gremlinExpression);
+            Trace.TraceInformation(gremlinExpression);
             var result = await _gremlinClient.SubmitAsync<dynamic>(gremlinExpression);
             return MaterializeDynamicCollection<T1, T2>(result);
         }
@@ -50,7 +48,7 @@ namespace Gremlin.Linq
         public async Task<IEnumerable<Tuple<QueryResult<T1>, QueryResult<T2>, QueryResult<T3>>>>
             SubmitDynamicAsync<T1, T2, T3>(string gremlinExpression) where T1 : new() where T2 : new() where T3 : new()
         {
-            Logger?.Log(gremlinExpression);
+            Trace.TraceInformation(gremlinExpression);
             var result = await _gremlinClient.SubmitAsync<dynamic>(gremlinExpression);
             return MaterializeDynamicCollection<T1, T2, T3>(result);
         }
@@ -58,12 +56,9 @@ namespace Gremlin.Linq
         public async Task<QueryResult<TEntity>> SubmitWithSingleResultAsync<TEntity>(string gremlinExpression)
             where TEntity : new()
         {
-            Logger?.Log(gremlinExpression);
+            Trace.TraceInformation(gremlinExpression);
             var result = await _gremlinClient.SubmitWithSingleResultAsync<dynamic>(gremlinExpression);
-            if (result == null)
-            {
-                return null;
-            }
+            if (result == null) return null;
 
             var materialized = Materialize<TEntity>(result);
             return materialized as QueryResult<TEntity>;
@@ -71,7 +66,7 @@ namespace Gremlin.Linq
 
         public async Task SubmitAsync(string gremlinExpression)
         {
-            Logger?.Log(gremlinExpression);
+            Trace.TraceInformation(gremlinExpression);
             await _gremlinClient.SubmitAsync<dynamic>(gremlinExpression);
         }
 
@@ -84,29 +79,20 @@ namespace Gremlin.Linq
         private IEnumerable<QueryResult<TEntity>> MaterializeCollection<TEntity>(IReadOnlyCollection<object> obj)
             where TEntity : new()
         {
-            foreach (var o in obj)
-            {
-                yield return Materialize<TEntity>(o as IDictionary<string, object>);
-            }
+            foreach (var o in obj) yield return Materialize<TEntity>(o as IDictionary<string, object>);
         }
 
         private IEnumerable<Tuple<QueryResult<T1>, QueryResult<T2>>> MaterializeDynamicCollection<T1, T2>(
             IReadOnlyCollection<object> obj) where T1 : new() where T2 : new()
         {
-            foreach (var o in obj)
-            {
-                yield return MaterializeDynamic<T1, T2>(o as IDictionary<string, object>);
-            }
+            foreach (var o in obj) yield return MaterializeDynamic<T1, T2>(o as IDictionary<string, object>);
         }
 
         private IEnumerable<Tuple<QueryResult<T1>, QueryResult<T2>, QueryResult<T3>>>
             MaterializeDynamicCollection<T1, T2, T3>(IReadOnlyCollection<object> obj)
             where T1 : new() where T2 : new() where T3 : new()
         {
-            foreach (var o in obj)
-            {
-                yield return MaterializeDynamic<T1, T2, T3>(o as IDictionary<string, object>);
-            }
+            foreach (var o in obj) yield return MaterializeDynamic<T1, T2, T3>(o as IDictionary<string, object>);
         }
 
         private Tuple<QueryResult<T1>, QueryResult<T2>> MaterializeDynamic<T1, T2>(IDictionary<string, object> obj)
@@ -140,35 +126,24 @@ namespace Gremlin.Linq
                 Id = obj["id"].ToString(),
                 Label = obj["label"].ToString()
             };
-            if (resultEntity is IGremlinEntity gremlinEntity)
-            {
-                gremlinEntity.Id = result.Id;
-            }
+            if (resultEntity is IGremlinEntity gremlinEntity) gremlinEntity.Id = result.Id;
 
             var entityProperties = typeof(TEntity).GetProperties();
-            if (!obj.TryGetValue("properties", out var propertiesObj))
-            {
-                return result;
-            };
+            if (!obj.TryGetValue("properties", out var propertiesObj)) return result;
+            ;
             var properties = (IDictionary<string, object>) propertiesObj;
             foreach (var propertyInfo in entityProperties)
             {
                 var propertyName = propertyInfo.Name;
                 if (propertyInfo.GetCustomAttributes(typeof(GremlinPropertyAttribute)).SingleOrDefault() is
                     GremlinPropertyAttribute propertyAttribute) propertyName = propertyAttribute.Name;
-                if (!properties.TryGetValue(propertyName, out dynamic value))
-                {
-                    continue;
-                }
+                if (!properties.TryGetValue(propertyName, out var value)) continue;
 
                 object storedValue;
                 if (value is IEnumerable<object> objects)
                 {
                     var dict = (IDictionary<string, object>) objects.ToList().First();
-                    if (!dict.TryGetValue("value", out storedValue))
-                    {
-                        continue;
-                    }
+                    if (!dict.TryGetValue("value", out storedValue)) continue;
                 }
                 else
                 {
@@ -178,15 +153,11 @@ namespace Gremlin.Linq
                 if (propertyInfo.PropertyType.IsEnum)
                 {
                     if (storedValue is long l)
-                    {
                         propertyInfo.GetSetMethod().Invoke(resultEntity,
                             new object[] {(int) l});
-                    }
                     else if (storedValue is string s)
-                    {
                         propertyInfo.GetSetMethod().Invoke(resultEntity,
                             new[] {Enum.Parse(propertyInfo.PropertyType, s)});
-                    }
                 }
                 else if (propertyInfo.PropertyType.IsPrimitive)
                 {
@@ -197,10 +168,8 @@ namespace Gremlin.Linq
                 {
                     var datetimeStr = storedValue.ToString();
                     if (DateTime.TryParse(datetimeStr, out var datetime))
-                    {
                         propertyInfo.GetSetMethod().Invoke(resultEntity,
                             new object[] {datetime});
-                    }
                 }
                 else if (propertyInfo.PropertyType == typeof(string))
                 {
