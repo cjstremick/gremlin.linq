@@ -27,7 +27,7 @@ namespace Gremlin.Linq.TestApp
             // optionally write these messages to the console by adding the following line...
             // Trace.Listeners.Add(new TextWriterTraceListener(Console.Out, "Gremlin"));
             
-            using (var client = new GraphClientFactory(_configuration).CreateGremlinGraphClient())
+            using (var client = GraphClientFactory.CreateGremlinGraphClient(new GraphClientSettings(_configuration)))
             {
                 // await CreateSampleData(client);
 

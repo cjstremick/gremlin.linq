@@ -12,7 +12,7 @@ namespace Gremlin.Linq
             _configuration = configuration;
         }
 
-        protected IGraphClient CreateGremlinGraphClient(GraphClientSettings settings)
+        public static IGraphClient CreateGremlinGraphClient(GraphClientSettings settings)
         {
             if (settings == null) throw new ArgumentNullException(nameof(settings));
 
