@@ -1,4 +1,5 @@
-﻿using Microsoft.Extensions.Configuration;
+﻿using System;
+using Microsoft.Extensions.Configuration;
 
 namespace Gremlin.Linq
 {
@@ -11,19 +12,17 @@ namespace Gremlin.Linq
             _configuration = configuration;
         }
 
-        public IGraphClient CreateGremlinGraphClient(GraphClientSettings settings)
+        protected IGraphClient CreateGremlinGraphClient(GraphClientSettings settings)
         {
-            var client =
-                new GremlinGraphClient(settings.Url, settings.Database, settings.Collection, settings.Password);
-            return client;
+            if (settings == null) throw new ArgumentNullException(nameof(settings));
+
+            return new GremlinGraphClient(settings.Url, settings.Database, settings.Collection, settings.Password);
         }
 
         public IGraphClient CreateGremlinGraphClient()
         {
             var settings = new GraphClientSettings(_configuration);
-            var gremlinGraphClient =
-                new GremlinGraphClient(settings.Url, settings.Database, settings.Collection, settings.Password);
-            return gremlinGraphClient;
+            return CreateGremlinGraphClient(settings);
         }
     }
 }
