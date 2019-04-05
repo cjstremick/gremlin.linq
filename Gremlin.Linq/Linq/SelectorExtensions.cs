@@ -44,6 +44,15 @@
             var queryResult = await selector.Client.SubmitWithSingleResultAsync<TEntity>(query);
             return queryResult;
         }
+        
+        public static OutSelector<T> Out<T>(this Selector selector, string edgeLabel = null)
+        {
+            var outSelector = new OutSelector<T>(selector.Client, edgeLabel)
+            {
+                ParentSelector = selector
+            };
+            return outSelector;
+        }
 
         public static SelectSelector Select(this Selector selector, params string[] selectors)
         {

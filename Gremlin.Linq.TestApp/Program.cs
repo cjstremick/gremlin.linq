@@ -8,7 +8,6 @@ namespace Gremlin.Linq.TestApp
 {
     internal class Program
     {
-
         private static IConfiguration _configuration;
 
         private static void Main(string[] args)
@@ -29,11 +28,11 @@ namespace Gremlin.Linq.TestApp
             
             using (var client = GraphClientFactory.CreateGremlinGraphClient(new GraphClientSettings(_configuration)))
             {
-                // await CreateSampleData(client);
+                await CreateSampleData(client);
 
                 await PerformTests(client);
 
-                // await CleanupSampleData(client);
+                await CleanupSampleData(client);
             }
         }
 
@@ -54,6 +53,13 @@ namespace Gremlin.Linq.TestApp
 
         private static async Task PerformTests(IGraphClient client)
         {
+            Console.WriteLine("** Count people:  ");
+            var peopleCount = await client
+                .From<Person>()
+                .Count()
+                .ExecuteAsync();
+            Console.WriteLine($"\tThere are {peopleCount} People.");
+
             Console.WriteLine("** All people:  ");
             var allPeople = await client
                 .From<Person>()
@@ -140,6 +146,19 @@ namespace Gremlin.Linq.TestApp
             await client.ConnectVerticies(ned, changeLightbulb, "can").SubmitAsync();
             await client.ConnectVerticies(ned, juggle, "can").SubmitAsync();
             await client.ConnectVerticies(ned, skateboard, "can").SubmitAsync();
+            Console.WriteLine("Done.");
+
+            Console.Write("Adding a person with some skills and a relationship in one hit...");
+            var qq = client.Add(new Person {FirstName = "Pam", LastName = "Poplar", Age = 13})
+                .AddOut(cook, "can")
+                .AddOut(changeLightbulb, "can")
+                .AddOut(eve, "likes")
+                .BuildGremlinQuery();
+            var pam = await client.Add(new Person {FirstName = "Pam", LastName = "Poplar", Age = 13})
+                .AddOut(cook, "can")
+                .AddOut(changeLightbulb, "can")
+                .AddOut(eve, "likes")
+                .SubmitAsync();
             Console.WriteLine("Done.");
         }
 

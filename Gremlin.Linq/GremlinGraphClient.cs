@@ -16,9 +16,7 @@ namespace Gremlin.Linq
 
         public GremlinGraphClient(string url, object database, string collection, string password)
         {
-            var gremlinServer = new GremlinServer(url, 443, true,
-                "/dbs/" + database + "/colls/" + collection,
-                password);
+            var gremlinServer = new GremlinServer(url, 443, true, $"/dbs/{database}/colls/{collection}", password);
 
             _gremlinClient = new GremlinClient(gremlinServer, new GraphSON2Reader(), new GraphSON2Writer(),
                 GremlinClient.GraphSON2MimeType);
@@ -130,7 +128,7 @@ namespace Gremlin.Linq
 
             var entityProperties = typeof(TEntity).GetProperties();
             if (!obj.TryGetValue("properties", out var propertiesObj)) return result;
-            ;
+
             var properties = (IDictionary<string, object>) propertiesObj;
             foreach (var propertyInfo in entityProperties)
             {

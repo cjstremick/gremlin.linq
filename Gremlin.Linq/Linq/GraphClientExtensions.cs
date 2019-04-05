@@ -10,14 +10,6 @@
             var command = new InsertCommand<TEntity>(client, entity);
             return command;
         }
-        public static UpdateCommand<TEntity> UpdateWith<TEntity>(this IWhereSelector<TEntity> selector, TEntity entity)
-        {
-            var command = new UpdateCommand<TEntity>(selector.Client, entity)
-            {
-                ParentSelector = selector
-            };
-            return command;
-        }
 
         public static FromSelector<TEntity> From<TEntity>(this IGraphClient client)
         {
@@ -31,20 +23,6 @@
             var fromSelector = new FromAnySelector(client);
             var whereSelector = new WhereAnySelector(client, hasField, value) {ParentSelector = fromSelector};
             return whereSelector;
-        }
-
-
-        public static AddEdgeCommand ConnectVerticies<TFromEntity, TToEntity>(this IGraphClient client,
-            QueryResult<TFromEntity> fromEntity, TToEntity toEntity, string relation)
-        {
-            var fromSelector = new FromSelector<TFromEntity>(client);
-            var whereSelector = new WhereAnySelector(client, "id", fromEntity.Id) {ParentSelector = fromSelector};
-            var addCommand = new AddEdgeCommand(client, toEntity, relation)
-            {
-                ParentSelector = whereSelector,
-                InsertCommand = new InsertCommand(client, toEntity)
-            };
-            return addCommand;
         }
 
         public static AddEdgeCommand ConnectVerticies<TFromEntity, TToEntity>(this IGraphClient client,
