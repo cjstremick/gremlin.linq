@@ -62,13 +62,13 @@ namespace Gremlin.Linq.Linq
             return outSelector;
         }
 
-        public static InSelector<T> In<T>(this IWhereSelector selector, string edgeLabel = null)
-        {
-            var inSelector = new InSelector<T>(selector.Client, edgeLabel)
-            {
-                ParentSelector = selector
-            };
-            return inSelector;
-        }
+        //public static InSelector<T> In<T>(this IWhereSelector selector, string edgeLabel = null)
+        //{
+        //    var inSelector = new InSelector<T>(selector.Client, edgeLabel)
+        //    {
+        //        ParentSelector = selector
+        //    };
+        //    return inSelector;
+        //}
     }
 }

@@ -28,11 +28,11 @@ namespace Gremlin.Linq.TestApp
             
             using (var client = GraphClientFactory.CreateGremlinGraphClient(new GraphClientSettings(_configuration)))
             {
-                await CreateSampleData(client);
+                //await CreateSampleData(client);
 
                 await PerformTests(client);
 
-                await CleanupSampleData(client);
+                //await CleanupSampleData(client);
             }
         }
 
@@ -110,8 +110,20 @@ namespace Gremlin.Linq.TestApp
                 .SubmitAsync();
             foreach (var user in hasManySkills)
                 Console.WriteLine($"\t{user.Entity.Name}");
-        }
 
+            
+            Console.WriteLine("** People who love people who can change lightbulbs:  ");
+            var inIn = await client
+                .From<Skill>()
+                .Where(u => u.Name == "Change lightbulb")
+                .In<Person>("can")
+                .In<Person>("loves")
+                .SubmitAsync();
+            foreach (var user in inIn)
+                Console.WriteLine($"\t{user.Entity.FirstName} {user.Entity.LastName}, Age = {user.Entity.Age}");
+
+        }
+        
         private static async Task CreateSampleData(IGraphClient client)
         {
             Console.Write("Adding people...");

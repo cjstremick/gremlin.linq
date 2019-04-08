@@ -44,7 +44,16 @@
             var queryResult = await selector.Client.SubmitWithSingleResultAsync<TEntity>(query);
             return queryResult;
         }
-        
+
+        public static InSelector<T> In<T>(this Selector selector, string edgeLabel = null)
+        {
+            var inSelector = new InSelector<T>(selector.Client, edgeLabel)
+            {
+                ParentSelector = selector
+            };
+            return inSelector;
+        }
+
         public static OutSelector<T> Out<T>(this Selector selector, string edgeLabel = null)
         {
             var outSelector = new OutSelector<T>(selector.Client, edgeLabel)
@@ -87,7 +96,7 @@
             return whereSelector;
         }
 
-        public static SetCommand<T> Set<T,TValue>(this SelectSelector<T> selector, Expression<Func<T,TValue>> expression, TValue value)
+        public static SetCommand<T> Set<T,TValue>(this SelectSelector<T> selector, Expression<Func<T, TValue>> expression, TValue value)
         {
             PropertyInfo property;
             if (expression.Body is MemberExpression memberExpression)
@@ -105,9 +114,9 @@
             return result;
         }
 
-        public static SelectSelector<T1,T2> Select<T1,T2>(this Selector selector)
+        public static SelectSelector<T1, T2> Select<T1,T2>(this Selector selector)
         {
-            var selectSelector = new SelectSelector<T1,T2>(selector.Client) { ParentSelector = selector };
+            var selectSelector = new SelectSelector<T1, T2>(selector.Client) { ParentSelector = selector };
             return selectSelector;
         }
 
@@ -133,7 +142,7 @@
             return queryResult;
         }
 
-        public static async Task<IEnumerable<Tuple<QueryResult<T1>, QueryResult<T2>>>> SubmitAsync<T1,T2>(this SelectSelector<T1,T2> selector) where T1 : new() where T2 : new()
+        public static async Task<IEnumerable<Tuple<QueryResult<T1>, QueryResult<T2>>>> SubmitAsync<T1,T2>(this SelectSelector<T1, T2> selector) where T1 : new() where T2 : new()
         {
             var query = selector.BuildGremlinQuery();
             var queryResult = await selector.Client.SubmitDynamicAsync<T1, T2>(query);
@@ -147,12 +156,11 @@
             return queryResult;
         }
 
-        public static async Task<IEnumerable<Tuple<QueryResult<T1>, QueryResult<T2>, QueryResult<T3>>>> SubmitAsync<T1,T2,T3>(this SelectSelector<T1,T2,T3> selector) where T1 : new() where T2 : new() where T3 : new()
+        public static async Task<IEnumerable<Tuple<QueryResult<T1>, QueryResult<T2>, QueryResult<T3>>>> SubmitAsync<T1,T2,T3>(this SelectSelector<T1, T2, T3> selector) where T1 : new() where T2 : new() where T3 : new()
         {
             var query = selector.BuildGremlinQuery();
             var queryResult = await selector.Client.SubmitDynamicAsync<T1, T2, T3>(query);
             return queryResult;
         }
-        
     }
 }
